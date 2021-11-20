@@ -1,30 +1,30 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:personal_dashboard_frontend/Data/user.dart';
 
 
-Future<bool> checkIfUserExists(username, password, token) async {
+Future<String> login(username, password) async {
   Map<String, dynamic> map = {'username': username, 'password': password};
 
-  final response = await http.put(
-    Uri.http("10.0.2.2:8000", "api/user/"),
+  final response = await http.post(
+    Uri.http("192.168.0.110:8000", "api-token-auth/"),
     body: jsonEncode(map),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'TOKEN ' + await token,
     },
   );
 
 
   switch(response.statusCode)
   {
-    case 202:
+    case 200:
       {
-        return true;
+        return json.decode(response.body)['token'];
       }
     case 400:
       {
-        return false;
+        return '';
 
       }
     default:
@@ -34,14 +34,12 @@ Future<bool> checkIfUserExists(username, password, token) async {
   }
 }
 
-Future<String> fetchToken() async {
-  Map<String, dynamic> map = {
-    'username': 'marcogold',
-    'password': 'marcodeaur'
-  };
+Future<String> register(User user) async {
+  Map<String, dynamic> map = user.toDatabaseJson();
+
 
   final response = await http.post(
-    Uri.http("10.0.2.2:8000", "api-token-auth/"),
+    Uri.http("192.168.0.110:8000", "api-token-auth/"),
     body: jsonEncode(map),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
@@ -53,5 +51,5 @@ Future<String> fetchToken() async {
     return token;
   }
 
-  throw Exception('Couldn\'t get the token');
+  throw Exception('Couldn\'t register');
 }
