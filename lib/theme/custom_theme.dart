@@ -8,9 +8,14 @@ class CustomTheme {
         scaffoldBackgroundColor: Colors.white,
         fontFamily: 'Montserrat', //3
         buttonTheme: ButtonThemeData( // 4
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
           buttonColor: Colors.purpleAccent,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          primary: Colors.purple,
         )
+    )
     );
   }
 
@@ -23,6 +28,7 @@ class CustomTheme {
         buttonTheme: ButtonThemeData(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18.0)),
           buttonColor: Colors.purple[300],
+
         )
     );
   }
