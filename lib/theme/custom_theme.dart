@@ -5,7 +5,7 @@ class CustomTheme {
   static ThemeData get lightTheme { //1
     return ThemeData( //2
         primaryColor: Colors.purple,
-        scaffoldBackgroundColor: Colors.white,
+        scaffoldBackgroundColor: Colors.grey[300],
         fontFamily: 'Montserrat', //3
         buttonTheme: ButtonThemeData( // 4
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.0)),
@@ -14,8 +14,12 @@ class CustomTheme {
         elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           primary: Colors.purple,
-        )
-    )
+        ),
+    ),
+      focusColor: Colors.purple,
+      textSelectionTheme: TextSelectionThemeData(selectionHandleColor: Colors.purple),
+      hoverColor: Colors.purple[900]
+
     );
   }
 

@@ -1,0 +1,12 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+:User:
+User -> (Main Page)
+(Main Page) -> (Login page) : choose
+(Login page) --> (Error message) : fail
+(Login page) --> (Login successful) : success
+(Login page) -> (Server) : request
+(Server) --> (Login page): response
+(Server) -> (Database)
+@enduml

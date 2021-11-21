@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:personal_dashboard_frontend/pages/loginPage.dart';
+import 'package:personal_dashboard_frontend/pages/registerPage.dart';
 import 'package:personal_dashboard_frontend/theme/custom_theme.dart';
 
 Future<void> main() async {
@@ -21,6 +22,7 @@ class _MyAppState extends State<MyApp> {
       theme: CustomTheme.lightTheme,
       routes: {
         '/login' : (context) => LoginPage(title: 'Login page'),
+        '/register': (context) => RegisterPage(title: 'Register page'),
       },
       home: Builder(
         builder: (context) =>Scaffold(
@@ -35,7 +37,12 @@ class _MyAppState extends State<MyApp> {
                 ElevatedButton(onPressed: () async {
                   Navigator.pushNamed(context, '/login');
                 },
-                    child: Text('Login page'))
+                    child: Text('Login page')),
+
+                ElevatedButton(onPressed: () async {
+                  Navigator.pushNamed(context, '/register');
+                },
+                    child: Text('Register page'))
               ],
             ),
           )
