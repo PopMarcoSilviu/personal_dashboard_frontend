@@ -2,7 +2,6 @@ class User {
 
    String username;
    String password;
-   String token= "";
    String lastName;
    String firstName;
    String email;
@@ -27,7 +26,6 @@ class User {
   Map<String, dynamic> toDatabaseJson() => {
     "username": username,
     "password": password,
-    "token": token,
     "first_name": firstName,
     "last_name": lastName,
     "email": email

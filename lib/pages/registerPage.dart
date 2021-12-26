@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 import 'package:personal_dashboard_frontend/api_connection/api_connection.dart';
 import 'package:personal_dashboard_frontend/data/aux_data.dart';
 import 'package:personal_dashboard_frontend/data/user.dart';
@@ -17,7 +18,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageStatus extends State<RegisterPage> {
 
-  final controllers = new List<TextEditingController>.generate(5, (index) => TextEditingController());
+  final controllers = new List<TextEditingController>.generate(6, (index) => TextEditingController());
 
   showAlertDialog(BuildContext context, code, error_msg)
   {
@@ -58,7 +59,8 @@ class _RegisterPageStatus extends State<RegisterPage> {
             SizedBox(
 
               child: ElevatedButton(onPressed: () async{
-                String registerSuccessful = await register(createUserFromTextForm());
+                String registerSuccessful = await register(createUserFromTextForm(),
+                    controllers[ClientField.password2.index].text);
 
                 if(registerSuccessful=='OK')
                   {
@@ -95,7 +97,7 @@ class _RegisterPageStatus extends State<RegisterPage> {
     {
       bool vis = true;
 
-      if ( field == ClientField.password)
+      if ( field == ClientField.password1 || field == ClientField.password2)
       {
         vis = false;
       }
@@ -110,7 +112,7 @@ class _RegisterPageStatus extends State<RegisterPage> {
   {
     return User(
       username: controllers[ClientField.username.index].text,
-      password: controllers[ClientField.password.index].text,
+      password: controllers[ClientField.password1.index].text,
       email: controllers[ClientField.email.index].text,
       firstName: controllers[ClientField.first_name.index].text,
       lastName: controllers[ClientField.last_name.index].text,
