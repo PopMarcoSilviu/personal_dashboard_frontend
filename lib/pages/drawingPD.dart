@@ -19,6 +19,7 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
   Color pickerColor0 = Colors.grey;
   Color pickerColor1 = Colors.blue;
   Color backgroundColor = Colors.grey;
+  Color brushColor = Colors.blue;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Color currentColor = Color(0xff443a49);
@@ -26,7 +27,7 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
   void changeColor(Color color) {
     setState(() {
       pickerColor0 = color;
-      controller.changeBrushColor(color);
+      // controller.changeBrushColor(color);
     });
   }
 
@@ -45,71 +46,120 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
+        key: _scaffoldKey,
+        appBar: AppBar(
+
+          automaticallyImplyLeading: false,
+
+          title: Text(widget.title),
+          leading:  IconButton(
               onPressed: () {
-                controller.deleteLastLine();
+                Navigator.pop(context);
               },
               icon: Icon(Icons.arrow_back)),
-          IconButton(
-              onPressed: () {
-                controller.deletePainting();
-              },
-              icon: Icon(Icons.delete)),
-        ],
-      ),
+          actions: [
 
-      drawer: Container(
-        width: 200,
-        child: Drawer(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 150,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {/*TODO save item to database*/},
-                  child: Text('Save'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+              child: IconButton(
+                  onPressed: () {
+                    controller.deleteLastLine();
+                  },
+                  icon: Icon(Icons.backspace)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+              child: IconButton(
+                  onPressed: () {
+                    controller.deletePainting();
+                  },
+                  icon: Icon(Icons.delete)),
+            ),
+          ],
+        ),
+        drawer: Container(
+          width: 200,
+          child: Drawer(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  width: 150,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      /*TODO save item to database*/
+                    },
+                    child: Text('Save'),
+                  ),
                 ),
-              ),
-
-              choosingButtons('Choose background color', 'Background color',
-                  context, pickerColor1, changeColor1),
-              choosingButtons('Choose brush color', 'Brush color', context,
-                  pickerColor0, changeColor),
-            ],
+                choosingButtons('Choose background color', 'Background color',
+                    context, pickerColor1, changeColor1),
+                choosingButtons('Choose brush color', 'Brush color', context,
+                    pickerColor0, changeColor),
+              ],
+            ),
           ),
         ),
+        body: GestureDetector(
+          onPanUpdate: (details) {
+            _scaffoldKey.currentState!.openDrawer();
+          },
+          child: Center(
+            child: Column(
+              children: [
+                Expanded(
+                  child: PaintingBoard(
+                    controller: controller,
+                    boardBackgroundColor: backgroundColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ));
+  }
+
+  Widget choosingButtons(buttonText, alertText, context, color, colorChangeFunc) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: SizedBox(
+        height: 70,
+        width: 150,
+        child: ElevatedButton(
+          onPressed: () async {
+            await showDialog(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  title: Text(alertText),
+                  content: SizedBox(
+                    width: 300,
+                    height: 450,
+                    child: Column(
+                      children: [
+                        colorPickerCreate(color, colorChangeFunc),
+                        ElevatedButton(
+                            onPressed: () {
+
+                              setState(() {
+                                backgroundColor = pickerColor1;
+                                brushColor = pickerColor0;
+                                controller.changeBrushColor(brushColor);
+
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: Text('Choose')),
+                      ],
+                    ),
+                  ),
+                ));
+          },
+          child: Text(buttonText),
+        ),
       ),
-
-
-    body: GestureDetector(
-    onPanUpdate: (details){
-    _scaffoldKey.currentState!.openDrawer();
-    },
-    child: Center(
-    child: Column(
-    children: [
-
-    Expanded(
-    child: PaintingBoard(
-    controller: controller,
-    boardBackgroundColor: backgroundColor,
-
-    ),
-    ),
-
-    // colorPickerCreate(pickerColor0, changeColor),
-    // colorPickerCreate(pickerColor1, changeColor1)
-    ],
-    ),
-    ),
-    ));
-    }
+    );
+  }
 
   @override
   void dispose() {
@@ -127,37 +177,4 @@ Widget colorPickerCreate(pickerColor, changeColor) {
   );
 }
 
-Widget choosingButtons(buttonText, alertText, context, color, colorChangeFunc) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: SizedBox(
-      height: 70,
-      width: 150,
-      child: ElevatedButton(
-        onPressed: () async {
-          await showDialog(
-              context: context,
-              builder: (BuildContext context) =>
-                  AlertDialog(
-                    title: Text(alertText),
-                    content: SizedBox(
-                      width: 300,
-                      height: 450,
-                      child: Column(
-                        children: [
-                          colorPickerCreate(color, colorChangeFunc),
-                          ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              child: Text('Ok')),
-                        ],
-                      ),
-                    ),
-                  ));
-        },
-        child: Text(buttonText),
-      ),
-    ),
-  );
-}
+
