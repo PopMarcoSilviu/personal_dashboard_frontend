@@ -1,12 +1,14 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:personal_dashboard_frontend/data/personalDashboard.dart';
 import 'package:personal_dashboard_frontend/data/user.dart';
 import 'package:tuple/tuple.dart';
-
+import 'package:image/image.dart' as I;
 
 dynamic getHeadersCookie(String? cookie) {
   Map<String, String> headers = {};
@@ -23,6 +25,45 @@ dynamic getHeadersCookie(String? cookie) {
   return headers;
 }
 
+Future<Uint8List> getDrawing(cookie, name) async {
+  final Map<String, dynamic> parameters = {
+    "name": name,
+  };
+
+  final response = await http.get(
+    Uri.http("192.168.43.243:8000", "api/user-drawing/", parameters),
+    headers: getHeadersCookie(cookie),
+  );
+
+
+
+  var list = response.body.substring(2, response.body.length - 2).split(',')
+    .map((e) => int.parse(e)).toList();
+
+  return Uint8List.fromList(list);
+}
+
+Future<bool> postDrawing(list, pd_name, cookie, pd) async {
+  final Map<String, String> data = {
+    'name': pd_name,
+    'drawing': jsonEncode(list),
+    'pd': pd.toString(),
+  };
+
+
+  final response = await http.post(
+    Uri.http("192.168.43.243:8000", "api/user-drawing/"),
+    headers: getHeadersCookie(cookie),
+    body: data,
+  );
+
+  if (response.statusCode == 201) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 Future<List<PersonalDashboard>> getPDsFromUser(user_id, cookie) async {
   final Map<String, dynamic> parameters = {
     "user": user_id.toString(),
@@ -34,7 +75,6 @@ Future<List<PersonalDashboard>> getPDsFromUser(user_id, cookie) async {
       headers: getHeadersCookie(cookie));
 
   if (response.statusCode == 200) {
-
     var responseJson = json.decode(response.body);
 
     return (responseJson as List)

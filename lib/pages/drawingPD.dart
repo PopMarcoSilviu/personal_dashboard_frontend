@@ -1,25 +1,33 @@
+import 'dart:typed_data';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_drawing_board/drawing_board.dart';
+import 'package:flutter_drawing_board/drawing_controller.dart';
 import 'package:flutter_painting_tools/flutter_painting_tools.dart';
 import 'package:personal_dashboard_frontend/api_connection/api_connection.dart';
-import 'package:personal_dashboard_frontend/data/personalDashboard.dart';
 
 class DrawingPdPage extends StatefulWidget {
-  DrawingPdPage({Key? key, required this.title}) : super(key: key);
+  DrawingPdPage(
+      {Key? key, required this.title, required this.cookie, required this.pd})
+      : super(key: key);
 
   final String title;
+  final dynamic cookie;
+  final int pd;
 
   _DrawingPdPageStatus createState() => _DrawingPdPageStatus();
 }
 
 class _DrawingPdPageStatus extends State<DrawingPdPage> {
-  late final PaintingBoardController controller;
-
+  late final DrawingController _drawingController;
   Color pickerColor0 = Colors.grey;
   Color pickerColor1 = Colors.blue;
   Color backgroundColor = Colors.grey;
   Color brushColor = Colors.blue;
+  late bool backgroundChanged;
+  late Future<Uint8List> drawing;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Color currentColor = Color(0xff443a49);
@@ -39,7 +47,9 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
 
   @override
   void initState() {
-    controller = PaintingBoardController();
+    backgroundChanged = false;
+    _drawingController = DrawingController();
+    drawing = getDrawing(widget.cookie, widget.title);
     super.initState();
   }
 
@@ -48,34 +58,14 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
     return Scaffold(
         key: _scaffoldKey,
         appBar: AppBar(
-
           automaticallyImplyLeading: false,
-
           title: Text(widget.title),
-          leading:  IconButton(
+          leading: IconButton(
               onPressed: () {
                 Navigator.pop(context);
               },
               icon: Icon(Icons.arrow_back)),
-          actions: [
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-              child: IconButton(
-                  onPressed: () {
-                    controller.deleteLastLine();
-                  },
-                  icon: Icon(Icons.backspace)),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
-              child: IconButton(
-                  onPressed: () {
-                    controller.deletePainting();
-                  },
-                  icon: Icon(Icons.delete)),
-            ),
-          ],
+          actions: [],
         ),
         drawer: Container(
           width: 200,
@@ -87,16 +77,16 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
                   width: 150,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      /*TODO save item to database*/
+                    onPressed: () async {
+                      var bytes = await _getImageData();
+                      bool saved = await postDrawing(
+                          bytes, widget.title, widget.cookie, widget.pd);
                     },
                     child: Text('Save'),
                   ),
                 ),
                 choosingButtons('Choose background color', 'Background color',
                     context, pickerColor1, changeColor1),
-                choosingButtons('Choose brush color', 'Brush color', context,
-                    pickerColor0, changeColor),
               ],
             ),
           ),
@@ -108,19 +98,46 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
           child: Center(
             child: Column(
               children: [
-                Expanded(
-                  child: PaintingBoard(
-                    controller: controller,
-                    boardBackgroundColor: backgroundColor,
-                  ),
-                ),
+                FutureBuilder<Uint8List>(
+                    future: drawing,
+                    builder:
+                        (BuildContext context, AsyncSnapshot<Uint8List> draw) {
+
+                      switch(draw.connectionState) {
+                        case ConnectionState.done:
+                          {
+                            return Expanded(
+                              child: DrawingBoard(
+                                  background: (backgroundChanged==true) ? Container(
+                                    color: backgroundColor,
+                                  ):
+                                  Image.memory(draw.data!),
+                                  // Text('da')    ,
+
+                              showDefaultTools: false,
+                              showDefaultActions: true,
+                              controller: _drawingController,
+                            ));
+                          }
+
+                        default:
+                          {
+                            return Text('da');
+                          }
+
+
+                      }
+
+
+                    }),
               ],
             ),
           ),
         ));
   }
 
-  Widget choosingButtons(buttonText, alertText, context, color, colorChangeFunc) {
+  Widget choosingButtons(
+      buttonText, alertText, context, color, colorChangeFunc) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
@@ -131,29 +148,27 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
             await showDialog(
                 context: context,
                 builder: (BuildContext context) => AlertDialog(
-                  title: Text(alertText),
-                  content: SizedBox(
-                    width: 300,
-                    height: 450,
-                    child: Column(
-                      children: [
-                        colorPickerCreate(color, colorChangeFunc),
-                        ElevatedButton(
-                            onPressed: () {
-
-                              setState(() {
-                                backgroundColor = pickerColor1;
-                                brushColor = pickerColor0;
-                                controller.changeBrushColor(brushColor);
-
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: Text('Choose')),
-                      ],
-                    ),
-                  ),
-                ));
+                      title: Text(alertText),
+                      content: SizedBox(
+                        width: 300,
+                        height: 450,
+                        child: Column(
+                          children: [
+                            colorPickerCreate(color, colorChangeFunc),
+                            ElevatedButton(
+                                onPressed: () {
+                                  setState(() {
+                                    backgroundColor = pickerColor1;
+                                    brushColor = pickerColor0;
+                                    backgroundChanged = true;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                                child: Text('Choose')),
+                          ],
+                        ),
+                      ),
+                    ));
           },
           child: Text(buttonText),
         ),
@@ -161,9 +176,13 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
     );
   }
 
+  Future<Int8List> _getImageData() async {
+    return (await _drawingController.getImageData())!.buffer.asInt8List();
+  }
+
   @override
   void dispose() {
-    controller.dispose();
+    _drawingController.dispose();
     super.dispose();
   }
 }
@@ -176,5 +195,3 @@ Widget colorPickerCreate(pickerColor, changeColor) {
     pickerAreaHeightPercent: 0.7,
   );
 }
-
-

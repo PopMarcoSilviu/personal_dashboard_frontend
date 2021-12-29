@@ -78,7 +78,7 @@ class _UserPageStatus extends State<UserPage> with TickerProviderStateMixin {
                   {
                     case 'DRAWING':
                       Navigator.push(context,
-                          MaterialPageRoute(builder:(context) =>DrawingPdPage(title: pd.name)));
+                          MaterialPageRoute(builder:(context) =>DrawingPdPage(title: pd.name, cookie: widget.headers,pd: widget.id)));
 
                       break;
                   }
