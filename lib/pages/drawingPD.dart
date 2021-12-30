@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_drawing_board/drawing_board.dart';
 import 'package:flutter_drawing_board/drawing_controller.dart';
-import 'package:flutter_painting_tools/flutter_painting_tools.dart';
 import 'package:personal_dashboard_frontend/api_connection/api_connection.dart';
 
 class DrawingPdPage extends StatefulWidget {
@@ -20,8 +19,10 @@ class DrawingPdPage extends StatefulWidget {
   _DrawingPdPageStatus createState() => _DrawingPdPageStatus();
 }
 
-class _DrawingPdPageStatus extends State<DrawingPdPage> {
+class _DrawingPdPageStatus extends State<DrawingPdPage>
+    with TickerProviderStateMixin {
   late final DrawingController _drawingController;
+  late AnimationController controller;
   Color pickerColor0 = Colors.grey;
   Color pickerColor1 = Colors.blue;
   Color backgroundColor = Colors.grey;
@@ -30,7 +31,22 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
   late Future<Uint8List> drawing;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Color currentColor = Color(0xff443a49);
+  @override
+  void initState() {
+    backgroundChanged = false;
+    _drawingController = DrawingController();
+    drawing = getDrawing(widget.cookie, widget.title);
+
+    controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..addListener(() {
+        setState(() {});
+      });
+    controller.repeat(reverse: true);
+
+    super.initState();
+  }
 
   void changeColor(Color color) {
     setState(() {
@@ -43,14 +59,6 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
     setState(() {
       pickerColor1 = color;
     });
-  }
-
-  @override
-  void initState() {
-    backgroundChanged = false;
-    _drawingController = DrawingController();
-    drawing = getDrawing(widget.cookie, widget.title);
-    super.initState();
   }
 
   @override
@@ -102,18 +110,17 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
                     future: drawing,
                     builder:
                         (BuildContext context, AsyncSnapshot<Uint8List> draw) {
-
-                      switch(draw.connectionState) {
+                      switch (draw.connectionState) {
                         case ConnectionState.done:
                           {
                             return Expanded(
-                              child: DrawingBoard(
-                                  background: (backgroundChanged==true) ? Container(
-                                    color: backgroundColor,
-                                  ):
-                                  Image.memory(draw.data!),
-                                  // Text('da')    ,
-
+                                child: DrawingBoard(
+                              background: (backgroundChanged == true ||
+                                      draw.data == null)
+                                  ? Container(
+                                      color: backgroundColor,
+                                    )
+                                  : Image.memory(draw.data!),
                               showDefaultTools: false,
                               showDefaultActions: true,
                               controller: _drawingController,
@@ -122,13 +129,16 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
 
                         default:
                           {
-                            return Text('da');
+                            return Center(
+                              child: CircularProgressIndicator(
+                                value: controller.value,
+                                color: Colors.purple,
+                                backgroundColor: Colors.purple[200],
+                                semanticsLabel: "Loading...",
+                              ),
+                            );
                           }
-
-
                       }
-
-
                     }),
               ],
             ),
@@ -183,6 +193,7 @@ class _DrawingPdPageStatus extends State<DrawingPdPage> {
   @override
   void dispose() {
     _drawingController.dispose();
+    controller.dispose();
     super.dispose();
   }
 }

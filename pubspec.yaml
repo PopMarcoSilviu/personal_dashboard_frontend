@@ -47,6 +47,7 @@ dependencies:
   painter: ^2.0.0
   flutter_drawing_board: ^0.1.9
   image: ^3.1.0
+  o_color_picker: ^1.0.2
 
 dev_dependencies:
   flutter_test:

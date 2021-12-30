@@ -5,6 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:personal_dashboard_frontend/data/data.dart';
 import 'package:personal_dashboard_frontend/data/personalDashboard.dart';
 import 'package:personal_dashboard_frontend/data/user.dart';
 import 'package:tuple/tuple.dart';
@@ -25,6 +26,24 @@ dynamic getHeadersCookie(String? cookie) {
   return headers;
 }
 
+Future<List<Note>> getNotes(cookie, name, pd) async {
+  final Map<String, dynamic> parameters = {
+    'name': name,
+    'pd': pd.toString(),
+  };
+
+  final response = await http.get(
+    Uri.http("192.168.43.243:8000", "api/user-note/", parameters),
+    headers: getHeadersCookie(cookie),
+  );
+
+  List<dynamic> json_data = json.decode(response.body);
+
+  List<Note> list = json_data.map((note) => Note.fromDatabaseJson(note)).toList();
+
+  return list;
+}
+
 Future<Uint8List> getDrawing(cookie, name) async {
   final Map<String, dynamic> parameters = {
     "name": name,
@@ -35,10 +54,11 @@ Future<Uint8List> getDrawing(cookie, name) async {
     headers: getHeadersCookie(cookie),
   );
 
-
-
-  var list = response.body.substring(2, response.body.length - 2).split(',')
-    .map((e) => int.parse(e)).toList();
+  var list = response.body
+      .substring(2, response.body.length - 2)
+      .split(',')
+      .map((e) => int.parse(e))
+      .toList();
 
   return Uint8List.fromList(list);
 }
@@ -49,7 +69,6 @@ Future<bool> postDrawing(list, pd_name, cookie, pd) async {
     'drawing': jsonEncode(list),
     'pd': pd.toString(),
   };
-
 
   final response = await http.post(
     Uri.http("192.168.43.243:8000", "api/user-drawing/"),

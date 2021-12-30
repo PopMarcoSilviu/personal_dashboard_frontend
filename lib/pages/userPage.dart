@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:personal_dashboard_frontend/api_connection/api_connection.dart';
 import 'package:personal_dashboard_frontend/data/personalDashboard.dart';
 import 'package:personal_dashboard_frontend/pages/drawingPD.dart';
+import 'package:personal_dashboard_frontend/pages/notePD.dart';
 
 class UserPage extends StatefulWidget {
   UserPage(
@@ -62,7 +63,7 @@ class _UserPageStatus extends State<UserPage> with TickerProviderStateMixin {
           var items = pds.data!.map((PersonalDashboard pd) {
             return DropdownMenuItem<PersonalDashboard>(
               value: pd,
-              child: Text(pd.name),
+              child: Text(pd.name + " (" + pd.type_of_pd + ")"),
             );
           }).toList();
 
@@ -72,17 +73,20 @@ class _UserPageStatus extends State<UserPage> with TickerProviderStateMixin {
             onChanged: (pd){
               setState(() {
                 // TODO make the pages for pds
-                  print(pd!.type_of_pd);
 
-                  switch(pd.type_of_pd)
+                  switch(pd!.type_of_pd)
                   {
                     case 'DRAWING':
                       Navigator.push(context,
                           MaterialPageRoute(builder:(context) =>DrawingPdPage(title: pd.name, cookie: widget.headers,pd: widget.id)));
 
                       break;
-                  }
+                    case 'NOTE':
+                      Navigator.push(context,
+                          MaterialPageRoute(builder:(context) =>NotePdPage(title: pd.name, cookie: widget.headers, pd: widget.id)));
 
+                      break;
+                  }
               });
             },
           );
@@ -108,6 +112,7 @@ class _UserPageStatus extends State<UserPage> with TickerProviderStateMixin {
   @override
   void dispose() {
     controller.dispose();
+
     super.dispose();
   }
 }
